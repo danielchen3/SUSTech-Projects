@@ -1,0 +1,27 @@
+Loading speed to PostgreSQL (insert one by one): 6526.303226886109 records/s
+Loading speed to PostgreSQL (insert one by one): 6784.137171328212 records/s
+Loading speed to PostgreSQL (insert one by one): 6852.586597779364 records/s
+Loading speed to PostgreSQL (insert many): 6641.4364211605025 records/s
+Loading speed to PostgreSQL (insert many): 6465.407996097236 records/s
+Loading speed to PostgreSQL (insert many): 6755.290709228506 records/s
+Loading speed to PostgreSQL (using copy_from): 32356.660892673623 records/s
+Loading speed to PostgreSQL (using copy_from): 31403.519529828896 records/s
+Loading speed to PostgreSQL (using copy_from): 31849.575198922023 records/s
+Loading speed by PostgreSQL (batch insert): 6553.017191033572 records/s
+Loading speed by PostgreSQL (batch insert): 6900.635208927913 records/s
+Loading speed by PostgreSQL (batch insert): 6760.938765518848 records/s
+Loading speed by PostgreSQL (batch insert): 6570.694277164633 records/s
+Loading speed to PostgreSQL (insert many): 7297.769141105607 records/s
+Loading speed to PostgreSQL (insert many): 7217.076312744631 records/s
+Loading speed to PostgreSQL (insert many): 6985.542390966526 records/s
+Loading speed by PostgreSQL (batch insert): 7244.910365932831 records/s
+Loading speed by PostgreSQL (batch insert): 7303.905695545158 records/s
+Loading speed by PostgreSQL (batch insert): 7369.268393267345 records/s
+Loading speed to PostgreSQL (using copy_from): 30805.207685790265 records/s
+Loading speed to PostgreSQL (using copy_from): 30159.821084832118 records/s
+Loading speed to PostgreSQL (using copy_from): 31849.575198922023 records/s
+Loading speed to PostgreSQL (using copy_from): 33294.12785431406 records/s
+Loading speed to PostgreSQL (using copy_from): 26579.583543195855 records/s
+Loading speed to PostgreSQL (insert many): 5786.303435653534 records/s
+Loading speed by PostgreSQL (batch insert): 5826.025215832061 records/s
+Loading speed to PostgreSQL (using copy_from): 26243.76020673128 records/s
