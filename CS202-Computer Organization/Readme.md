@@ -1,0 +1,280 @@
+# CS202 计算机组成原理 CPU开发大作业
+
+## 开发者说明
+
+小组成员 ：陈长信（12210731）陈泽南（12213021）朱柯奇（12211226）
+
+|  姓名  |                   Task                   | 贡献比 |
+| :----: | :--------------------------------------: | :----: |
+| 陈长信 |     CPU的所有设计以及场景1的汇编部分     |  33%   |
+| 陈泽南 |     MemOrIO板块和汇编场景二的后三个      |  33%   |
+| 朱柯奇 | 所有IO显示和输入板块和汇编场景二的前五个 |  33%   |
+
+
+
+
+
+## CPU架构设计说明
+
+### CPU特性
+
+#### ISA的实现
+
+本作业实现的CPU支持RISC-V的ISA（指令集架构），支持但不限于以下指令集（以下仅列举基本指令集）
+
+| Type name | 对应编码(Opcode) |                       具体指令                       |
+| :-------: | :--------------: | :--------------------------------------------------: |
+|     R     |     0110011      |       add,sub,xor,or,and,sll,srl,sra,slt,sltu        |
+|     I     |     0010011      | addi, xori, ori, andi, slli, srli, srai, slti, sltiu |
+|     I     |     0000011      |                          lw                          |
+|     I     |     1100111      |                         jalr                         |
+|     S     |     0100011      |                          sw                          |
+|     B     |     1100011      |            beq, bne, blt, bge, bltu, bgeu            |
+|     J     |     1101111      |                         jal                          |
+|     U     | 0110111/0010111  |                      lui, auipc                      |
+
+**使用方式**：与普通RISC-V并无本质区别，具体使用方式请详见RISC-V Reference Card
+
+![image-20240608202346007](C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608202346007.png)
+
+
+
+#### 寄存器说明
+
+本项目按照RISC-V 标准定义了 32 个通用寄存器，每个寄存器 32 位宽度：
+
+- **x0**: 硬件置零寄存器，始终为零
+- **x1-x31**: 通用寄存器，用于数据和地址操作，**但是由于本项目需要与IO进行交互，x27寄存器被用作外部读入写入的标准参考，不可作为通用寄存器使用。**
+
+
+
+#### CPU时钟
+
+本CPU采用频率为**23MHZ**的时钟，表现为**单周期CPU**，即一个时钟周期执行一条指令。
+
+CPU在每次上升沿抓取新指令，在一个周期内执行完毕，所以CPU的CPI ≈ 1。
+
+
+
+#### 寻址空间设计
+
+由于我们的设计是一种将程序存储和数据存储分为两个寻址空间的存储器结构，所以我们的CPU符合**哈佛结构**。
+
+- **寻址单位**：字（Word，32位）
+
+- **指令空间**：使用Single-port ROM方式 作为指令集存储工具，**Size= 64KB**
+
+- **数据空间的大小**：采用 Single-port RAM方式 作为数据存储工具，**Size= 64KB**
+
+- **栈空间的基地址**：32'h0FFF_FFFF
+
+
+
+#### 对外设IO的支持
+
+- 我们支持从FPGA开发板开关上读取`1bit,3bit (signed and unsigned), 8bit, 12bit, 16bit`的数据，支持从LED灯输出16bit数据以及从数码管输出32bit的数据（16进制）。
+
+- 另外，本设计采用MMIO方式访问外设，采用轮询的方式访问IO。
+
+
+
+
+
+### CPU接口
+
+````verilog
+//CPU总模块
+module CPU_Top(clk_FPGA,rst,
+    enter,
+    dataout,
+    tub_sel,
+    seg_led1234,seg_led5678,
+    datafromswitch    
+);
+````
+
+**时钟**：由于项目使用FPGA开发板，时间信号clk_FPGA(100MHZ)需要经过分频接到clk(23MHZ)接口，最后clk作为总CPU的时钟信号使用。
+
+**复位**：复位信号`rst`，为low_active即低电频敏感。
+
+**其他IO接口说明**：
+
+- `enter`：确定键，在输入测试样例编号以及输入数据后，按下确定键表示确认输入完成。  
+
+- `dataout`：每个样例输出的数据，在七段数码管或者LED灯上显示。   
+
+
+- `tub_sel,seg_led1234,seg_led567`：通过频闪实现七段数码显示8个16进制数据。   
+
+- `datafromswitch`：从开关获取的数据，用来表示各种输入的值。
+
+
+
+###  CPU 内部结构
+
+下面，我将对CPU内部各模块进行分块说明（包括我们用来与外部IO_Top交互的`MemorIO`模块）
+
+**注明**：由于部分CPU内部结构模块较为简单，在此仅做简单解释，详细了解请见源代码。
+
+#### Instruction_Fetch
+
+
+
+<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608210909248.png" alt="image-20240608210909248" style="zoom: 67%;" />
+
+这里传入上个指令结束时候传回来的`ALU_result`，`Immediate`，以及来自controller中的`Jal，Jr`等判断信号。
+
+通过这些信号的值来判断下一个抓取指令的具体地址（也就是如何更新`PC_out`的值），然后再在ROM中进行具体指令的获取。
+
+````verilog
+always..//
+if (Jal)begin
+    PC_in <= PC_in + Immediate;
+    PC_out <= PC_in + 4;
+end
+else if(Branch_jump)
+    PC_in <= PC_in + Immediate;
+else if(Jr)
+    PC_in <= ALU_result;
+else 
+    PC_in <= PC_in + 4;
+
+//指令抓取
+Instruction_mem inst_mem_inst (
+        .rom_clk_i(clk),
+        .rom_adr_i(rom_addr),
+    .Instruction_o(Instruction))
+````
+
+
+
+#### Immediate生成器
+
+<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608211500323.png" alt="image-20240608211500323" style="zoom:67%;" />
+
+本模块较为简单，就是一个根据指令的立即数生成模块，生成立即数供其余板块使用。
+
+
+
+#### Controller
+
+<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608211933522.png" alt="image-20240608211933522" style="zoom:67%;" />
+
+Controller模块就是根据指令，输出各种信号，其中IORead和IOWrite用于IO板块的输入输出信号的判断，不属于CPU内部的设计，除了ALUOp的设计，其他都是1bit 的1/0判断信号。
+
+ALUOp是根据指令的类型所给ALU模块的计算提示，比如如果需要执行加法，ALUOp码将会变为4'b0000。
+
+其他信号可根据名字进行推测，即为指令类型的基本判断。
+
+
+
+#### ALU选择器
+
+<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608212257810.png" alt="image-20240608212257810" style="zoom:67%;" />
+
+本模块为选择器模块，输出32bit的data，会直接对接ALU计算模块，用来和Read_data_1进行直接计算。
+
+本模块逻辑为，如果ALUSrc信号为1，那么就是data为立即数，否则为第二个读入数据。
+
+
+
+#### ALU计算模块
+
+<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608212444971.png" alt="image-20240608212444971" style="zoom:67%;" />
+
+本模块为综合计算模块，主要提供根据ALUOp信号的两个输入数据的对应计算功能；另外，本模块还提供了Branch是否进行跳转的判断，涉及到unsigned或者signed的符号区分，特地在本部分进行了判断为下一个指令的抓取提供参考，接到之前提到的IF模块。
+
+
+
+#### 数据存储
+
+<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608212809570.png" alt="image-20240608212809570" style="zoom:67%;" />
+
+本模块为数据存储模块，主要根据`MemWrite`信号判断是否将数据写入RAM，同样也根据`MemRead`来判断是否读出内存空间中的数据作为输出，提供给后续的写回操作。
+
+
+
+#### 数据写回寄存器
+
+<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608213027068.png" alt="image-20240608213027068" style="zoom:67%;" />
+
+本模块部分信号如IORead，r_wdata为与IO的交互部分，另外部分的逻辑大概为根据ALU算出的数据以及Mem中读出了的数据，并结合是否写入寄存器的信号，来传出写入的具体数据，其实本质上是一个多路选择器。
+
+
+
+#### 寄存器模块
+
+<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608213235681.png" alt="image-20240608213235681" style="zoom:67%;" />
+
+本部分定义了32个寄存器，进行写入寄存器以及读寄存器的一系列操作，值得注意的是，正如前文提到，受限于IO模块交互的原因，x27寄存器被用来与IO模块交互信号识别，故在初始化寄存器时候被设定了特定地址值。
+
+- `Read_data_1`代表Instruction中对应寄存器的第一个数据，`Read_data_2`同理。
+
+
+
+#### MemorIO模块
+
+<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608213517461.png" alt="image-20240608213517461" style="zoom:67%;" />
+
+本部分总体按照lab课ppt框架构建，其中`ioRead, ioWrite`代表是否需要从IO读入或从IO输出数据，并直接与`LEDCtrl，SwitichCtrl`相连。
+
+- `mRead，mWrite`代表是否需要从内存中读入数据或将数据写入内存中
+- `addr_in`代表由CPU的ALU计算出的，lw, sw指令对应的地址，并直接传给`addr_out`，用于控制IO板块输入数据的类型；
+- `m_rdata`代表在lw指令中从内存中读取的数据；
+- `io_rdata`代表在lw指令中从IO中读入的数据；
+- `r_wdata`代表在lw指令中读入寄存器的数据；
+- `r_rdata`代表在sw指令中从寄存器获取的数据；
+- `write_data`代表的是sw指令中需要写入内存或者从io输出的数据。
+
+
+
+#### CPU_TOP模块中所有模块接线情况
+
+由于篇幅问题， CPU 内部各子模块的接口连接关系图请见**附录**
+
+
+
+
+
+## 系统上板使用说明
+
+- 复位信号采用开发板上自带的`reset`按钮，当按下按钮后所有的存储数据的变量内的数据会变为初始值并且回到输入测试样例编号的步骤。
+
+- 最左侧的三个开关代表输入的样例编号，按下确定键后进入对应样例，然后按照样例要求输入数据。
+- IO模块将从MemorIO模块中得到计算后的结果数据，将其转换成16进制从七段数码管输出，或者取16位在LED灯上输出（采用低位在左侧的顺序）
+
+
+
+
+
+## 自测试说明
+
+|     测试模块      | 测试方法 | 测试类型  |                           测试用例                           | 测试结果 |                           测试结论                           |
+| :---------------: | :------: | :-------: | :----------------------------------------------------------: | :------: | :----------------------------------------------------------: |
+|     CPU总模块     |   仿真   | 集成+单元 |         使用测试场景一的指令集，赋值为a = 18,b = 19          |   通过   | 可以正常运行，可以支持实现的大部分指令，所有有关信号均正确。 |
+| IO总模块（IO_TOP) |   上板   | 集成+单元 | 测试用例是场景一中3b’000样例输入a = 5，b = 10    在LED等正确显示了a和b的二进制数 |   通过   |            显示正常，可以正常与CPU运行模块对接。             |
+
+
+
+## 问题和结论
+
+开发过程中遇到的问题：
+
+1. CPU模块的分块设计上手较难，最后根据Lecture中Datapath一步步拆分完成模块的分割设计。
+2. CPU模块中写回操作需要延缓半个周期，关于时间信号的上升下降沿的区分是CPU模块开发遇到的主要问题，最后严格按照仿真图将各个时序逻辑的触发时机分清楚才得以解决。
+3. 在仿真无误，但上板见不到正确输出时，应当考虑到时钟周期是否合理，和`rst`信号是否为低电平有效的情况。
+
+4. `IO`和`MemorIO`两个板块之间对接较为复杂，有很多交互的数据和判断信号，以及判断是从IO中获取数据还是在IO上显示数据，以及处理从`MemorIO`中获取的数据，判断需要输出几位。同样的，将输入数据输出给`MemorIO`时也需要处理数据，通过sw指令指定的地址来进行具体判断。
+
+
+
+
+
+
+
+## 附录
+
+<img src="C:\Users\B_W_Y_Y\Desktop\Screenshot 2024-06-09 204322.png" alt="Screenshot 2024-06-09 204322"  />
+
+
+
