@@ -2,13 +2,13 @@
 
 ## 开发者说明
 
-小组成员 ：陈长信（12210731）陈泽南（12213021）朱柯奇（12211226）
+小组成员 ：xxx
 
 |  姓名  |                   Task                   | 贡献比 |
 | :----: | :--------------------------------------: | :----: |
-| 陈长信 |     CPU的所有设计以及场景1的汇编部分     |  33%   |
-| 陈泽南 |     MemOrIO板块和汇编场景二的后三个      |  33%   |
-| 朱柯奇 | 所有IO显示和输入板块和汇编场景二的前五个 |  33%   |
+| xxx |     CPU的所有设计以及场景1的汇编部分     |  33%   |
+| xxx |     MemOrIO板块和汇编场景二的后三个      |  33%   |
+| xxx | 所有IO显示和输入板块和汇编场景二的前五个 |  33%   |
 
 
 
@@ -120,8 +120,6 @@ module CPU_Top(clk_FPGA,rst,
 
 
 
-<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608210909248.png" alt="image-20240608210909248" style="zoom: 67%;" />
-
 这里传入上个指令结束时候传回来的`ALU_result`，`Immediate`，以及来自controller中的`Jal，Jr`等判断信号。
 
 通过这些信号的值来判断下一个抓取指令的具体地址（也就是如何更新`PC_out`的值），然后再在ROM中进行具体指令的获取。
@@ -150,7 +148,7 @@ Instruction_mem inst_mem_inst (
 
 #### Immediate生成器
 
-<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608211500323.png" alt="image-20240608211500323" style="zoom:67%;" />
+
 
 本模块较为简单，就是一个根据指令的立即数生成模块，生成立即数供其余板块使用。
 
@@ -158,7 +156,6 @@ Instruction_mem inst_mem_inst (
 
 #### Controller
 
-<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608211933522.png" alt="image-20240608211933522" style="zoom:67%;" />
 
 Controller模块就是根据指令，输出各种信号，其中IORead和IOWrite用于IO板块的输入输出信号的判断，不属于CPU内部的设计，除了ALUOp的设计，其他都是1bit 的1/0判断信号。
 
@@ -170,7 +167,7 @@ ALUOp是根据指令的类型所给ALU模块的计算提示，比如如果需要
 
 #### ALU选择器
 
-<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608212257810.png" alt="image-20240608212257810" style="zoom:67%;" />
+
 
 本模块为选择器模块，输出32bit的data，会直接对接ALU计算模块，用来和Read_data_1进行直接计算。
 
@@ -180,7 +177,7 @@ ALUOp是根据指令的类型所给ALU模块的计算提示，比如如果需要
 
 #### ALU计算模块
 
-<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608212444971.png" alt="image-20240608212444971" style="zoom:67%;" />
+
 
 本模块为综合计算模块，主要提供根据ALUOp信号的两个输入数据的对应计算功能；另外，本模块还提供了Branch是否进行跳转的判断，涉及到unsigned或者signed的符号区分，特地在本部分进行了判断为下一个指令的抓取提供参考，接到之前提到的IF模块。
 
@@ -188,7 +185,7 @@ ALUOp是根据指令的类型所给ALU模块的计算提示，比如如果需要
 
 #### 数据存储
 
-<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608212809570.png" alt="image-20240608212809570" style="zoom:67%;" />
+
 
 本模块为数据存储模块，主要根据`MemWrite`信号判断是否将数据写入RAM，同样也根据`MemRead`来判断是否读出内存空间中的数据作为输出，提供给后续的写回操作。
 
@@ -196,7 +193,7 @@ ALUOp是根据指令的类型所给ALU模块的计算提示，比如如果需要
 
 #### 数据写回寄存器
 
-<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608213027068.png" alt="image-20240608213027068" style="zoom:67%;" />
+
 
 本模块部分信号如IORead，r_wdata为与IO的交互部分，另外部分的逻辑大概为根据ALU算出的数据以及Mem中读出了的数据，并结合是否写入寄存器的信号，来传出写入的具体数据，其实本质上是一个多路选择器。
 
@@ -204,7 +201,7 @@ ALUOp是根据指令的类型所给ALU模块的计算提示，比如如果需要
 
 #### 寄存器模块
 
-<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608213235681.png" alt="image-20240608213235681" style="zoom:67%;" />
+
 
 本部分定义了32个寄存器，进行写入寄存器以及读寄存器的一系列操作，值得注意的是，正如前文提到，受限于IO模块交互的原因，x27寄存器被用来与IO模块交互信号识别，故在初始化寄存器时候被设定了特定地址值。
 
@@ -214,7 +211,7 @@ ALUOp是根据指令的类型所给ALU模块的计算提示，比如如果需要
 
 #### MemorIO模块
 
-<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608213517461.png" alt="image-20240608213517461" style="zoom:67%;" />
+
 
 本部分总体按照lab课ppt框架构建，其中`ioRead, ioWrite`代表是否需要从IO读入或从IO输出数据，并直接与`LEDCtrl，SwitichCtrl`相连。
 
@@ -271,10 +268,6 @@ ALUOp是根据指令的类型所给ALU模块的计算提示，比如如果需要
 
 
 
-
-## 附录
-
-<img src="C:\Users\B_W_Y_Y\Desktop\Screenshot 2024-06-09 204322.png" alt="Screenshot 2024-06-09 204322"  />
 
 
 
