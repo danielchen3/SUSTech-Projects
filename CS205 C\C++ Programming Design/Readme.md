@@ -1,6 +1,7 @@
 # CS205  C/C++  Programming
 
-​	本仓库为C/C++ Programming课程项目仓库，分为5个项目，课程教师：Prof. shiqi Yu
+​This repository contains projects in C/C++ Programming course. 
+Supervisor：Prof. shiqi Yu
 
 |               Project Name               | Score  |
 | :--------------------------------------: | :----: |
