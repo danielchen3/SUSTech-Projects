@@ -35,8 +35,6 @@
 
 **使用方式**：与普通RISC-V并无本质区别，具体使用方式请详见RISC-V Reference Card
 
-![image-20240608202346007](C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240608202346007.png)
-
 
 
 #### 寄存器说明
