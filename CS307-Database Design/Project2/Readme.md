@@ -2,22 +2,22 @@
 
 ## 成员信息与分工
 
-1. 小组成员：陈长信（12210731）、赵欣瞳（12212727）
+1. 小组成员：xxx 、xxx
 2. 实验课：Thursday 3-4
-3. 任务分配占比   **成员贡献比：陈长信（60%）赵欣瞳（40%）**
+3. 任务分配占比   **成员贡献比：xxx（60%）xxx（40%）**
 
 
 
 |                    Task                     |  Author(Name)  |
 | :-----------------------------------------: | :------------: |
-|          所有基础部分API函数的编写          | 陈长信、赵欣瞳 |
-|              GUI交互界面的设计              |     陈长信     |
-|          Bonus中部分高级API的编写           |     赵欣瞳     |
-| 封装成服务器，使用ORM映射、连接池、后端框架 |     陈长信     |
-|    代码包的管理以及应用HTTP/RESTful Web     |     陈长信     |
-|    不同等级用户的创建以及用户权限的测试     |     陈长信     |
-|                  MySQL实验                  |     陈长信     |
-|                  报告撰写                   | 陈长信、赵欣瞳 |
+|          所有基础部分API函数的编写          | xxx |
+|              GUI交互界面的设计              |     xxx   |
+|          Bonus中部分高级API的编写           |     xxx    |
+| 封装成服务器，使用ORM映射、连接池、后端框架 |     xxx     |
+|    代码包的管理以及应用HTTP/RESTful Web     |     xxx    |
+|    不同等级用户的创建以及用户权限的测试     |     xxx    |
+|                  MySQL实验                  |     xxx    |
+|                  报告撰写                   | xxx |
 
 
 
@@ -138,7 +138,6 @@ gui/
 
 其中登录界面login_window即用户输入账户名、账户密码的界面，输入正确的用户信息之后，进入chooser界面，即提供对API功能的选择，选择对应的功能之后可以跳转到function模块中对应的GUI界面，对对应的API交互功能进行具体实现。(部分截图见后文)
 
-<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240603190155791.png" alt="image-20240603190155791" style="zoom: 67%;" />
 
 本项目主要借助python中`PyQt5`库来搭建一个主要以按钮构成的GUI界面，包括但不限于`QWidget`, `QVBoxLayout`, `QLabel`,  `QPushButton`等核心模块。
 
@@ -167,7 +166,6 @@ def initUI(self):
 
 
 
-<img src="C:\Users\B_W_Y_Y\AppData\Roaming\Typora\typora-user-images\image-20240605151241398.png" alt="image-20240605151241398" style="zoom: 50%;" />
 
 同理，完成登陆之后`chooser.py`中主要进行的操作的选择操作，这里由于篇幅的限制原因，下面只进行一些简单的解析，具体运行的结果请见具体代码。完成chooser的选择之后，系统会跳转到对应的`funtion.py`中的GUI 模块进行操作。
 
